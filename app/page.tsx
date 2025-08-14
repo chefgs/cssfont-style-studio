@@ -1,5 +1,7 @@
 "use client"
 
+import React from "react"
+
 import { useState, useEffect } from "react"
 import { ChevronDown, Edit3, Palette, Type, Sun, Moon } from "lucide-react"
 
@@ -28,7 +30,7 @@ const defaultTexts = {
 const colorPresets = [
   { name: "Default", bg: "#121318", border: "#1b1d24", text: "#ffffff", accent: "#2dd4bf", muted: "#9aa1ad" },
   { name: "Purple", bg: "#1a1625", border: "#2d2438", text: "#ffffff", accent: "#a855f7", muted: "#a78bfa" },
-  { name: "Blue", bg: "#0f172a", border: "#1e293b", text: "#ffffff", accent: "#3b82f6", muted: "#94a3b8" },
+  { name: "Blue", bg: "#0f172a", border: "#1e293b", text: "#ffffff", accent: "#3b82f6", muted: "#64748b" },
   { name: "Green", bg: "#0f1419", border: "#1f2937", text: "#ffffff", accent: "#10b981", muted: "#6ee7b7" },
   { name: "Orange", bg: "#1c1917", border: "#292524", text: "#ffffff", accent: "#f97316", muted: "#fdba74" },
 ]
@@ -47,6 +49,7 @@ export default function FontStackDemo() {
   const [texts, setTexts] = useState(defaultTexts)
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
+  const [fontColorIndex, setFontColorIndex] = useState(0)
   const [fontSize, setFontSize] = useState(100)
   const [lineHeight, setLineHeight] = useState(105)
   const [letterSpacing, setLetterSpacing] = useState(-1)
@@ -54,31 +57,71 @@ export default function FontStackDemo() {
 
   const currentColorPresets = isDarkMode ? colorPresets : lightColorPresets
   const selectedColor = currentColorPresets[selectedColorIndex]
+  const fontColor = currentColorPresets[fontColorIndex]
 
-  const handleTextChange = (key: keyof typeof texts, value: string) => {
-    setTexts((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const resetTexts = () => {
-    setTexts(defaultTexts)
-  }
-
-  const scrollToCustomization = () => {
-    setShowCustomization(true)
-    setTimeout(() => {
-      document.getElementById("customization-section")?.scrollIntoView({
-        behavior: "smooth",
-      })
-    }, 100)
+  const getCurrentFontFamily = () => {
+    switch (activeView) {
+      case "apple":
+        return '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+      case "android":
+        return 'Roboto, "Droid Sans", "Helvetica Neue", Arial, sans-serif'
+      case "windows":
+        return '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+      case "cross":
+        return 'Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+      default:
+        return '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+    }
   }
 
   useEffect(() => {
     document.body.style.backgroundColor = selectedColor.bg
     document.body.style.color = selectedColor.text
-  }, [selectedColor])
+    document.body.style.fontFamily = getCurrentFontFamily()
+  }, [selectedColor, activeView])
+
+  const generateCSSCode = () => {
+    const baseFontStack = fontStacks[activeView]
+    const colorCSS = `color: ${fontColor.text};`
+
+    if (activeView === "cross" && baseFontStack.includes("@import")) {
+      const [importLine, ...fontLines] = baseFontStack.split("\n")
+      return `${importLine}
+
+/* Typography with custom color */
+.typography-preview {
+  ${fontLines.join("\n")}
+  ${colorCSS}
+}`
+    } else {
+      return `/* Typography with custom color */
+.typography-preview {
+  ${baseFontStack.split("\n").slice(1, -1).join("\n")}
+  ${colorCSS}
+}`
+    }
+  }
+
+  const scrollToCustomization = () => {
+    setShowCustomization(true)
+    // Use setTimeout to ensure the section is rendered before scrolling
+    setTimeout(() => {
+      document.getElementById("customization-section")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    }, 100)
+  }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: selectedColor.bg, color: selectedColor.text }}>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: selectedColor.bg,
+        color: selectedColor.text,
+        fontFamily: getCurrentFontFamily(),
+      }}
+    >
       {/* Header */}
       <header
         className="sticky top-0 z-50 border-b backdrop-blur-sm"
@@ -128,14 +171,23 @@ export default function FontStackDemo() {
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight mb-6">
+          <h1
+            className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight mb-6"
+            style={{ fontFamily: getCurrentFontFamily() }} // Ensure hero uses selected font
+          >
             Compare System
             <span className="block" style={{ color: selectedColor.accent }}>
               Font Stacks
             </span>
           </h1>
 
-          <p className="text-xl sm:text-2xl mb-8 max-w-3xl mx-auto" style={{ color: selectedColor.muted }}>
+          <p
+            className="text-xl sm:text-2xl mb-8 max-w-3xl mx-auto"
+            style={{
+              color: selectedColor.muted,
+              fontFamily: getCurrentFontFamily(), // Apply font to hero text
+            }}
+          >
             Explore how typography renders across different operating systems. See the visual differences between iOS,
             Android, Windows, and cross-platform font stacks.
           </p>
@@ -176,93 +228,63 @@ export default function FontStackDemo() {
       <section
         id="what-is-section"
         className="py-20 px-4 sm:px-6 lg:px-8 border-t"
-        style={{ borderColor: selectedColor.border }}
+        style={{
+          borderColor: selectedColor.border,
+          fontFamily: getCurrentFontFamily(), // Apply font to what-is section
+        }}
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">What is FontStack Studio?</h2>
-            <p className="text-xl max-w-3xl mx-auto" style={{ color: selectedColor.muted }}>
+            <h2
+              className="text-4xl sm:text-5xl font-bold mb-6"
+              style={{ fontFamily: getCurrentFontFamily() }} // Apply font to section heading
+            >
+              What is FontStack Studio?
+            </h2>
+            <p
+              className="text-xl max-w-3xl mx-auto"
+              style={{
+                color: selectedColor.muted,
+                fontFamily: getCurrentFontFamily(), // Apply font to section text
+              }}
+            >
               A powerful tool for designers and developers to visualize and compare how system fonts render across
               different platforms and devices.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div
-              className="text-center p-6 rounded-xl border"
-              style={{
-                borderColor: selectedColor.border,
-                backgroundColor: `${selectedColor.bg}80`,
-              }}
-            >
+          {/* Grid cards with font family applied */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center items-center">
+            {[
+              { icon: Type, title: "iOS Fonts", desc: "Experience San Francisco font rendering on Apple devices" },
+              { icon: Palette, title: "Android Fonts", desc: "See how Roboto and Material Design fonts appear" },
+              { icon: Edit3, title: "Windows Fonts", desc: "Compare Segoe UI and Windows system typography" },
+              { icon: Type, title: "Cross-Platform", desc: "Universal fallback stacks that work everywhere" },
+            ].map((item, index) => (
               <div
-                className="w-12 h-12 rounded-lg mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: selectedColor.accent }}
+                key={index}
+                className="text-center p-6 rounded-xl border"
+                style={{
+                  borderColor: selectedColor.border,
+                  backgroundColor: `${selectedColor.bg}80`,
+                  fontFamily: getCurrentFontFamily(), // Apply font to cards
+                }}
               >
-                <Type className="w-6 h-6" style={{ color: isDarkMode ? "#06120f" : "#ffffff" }} />
+                <div
+                  className="w-12 h-12 rounded-lg mx-auto mb-4 flex items-center justify-center"
+                  style={{ backgroundColor: selectedColor.accent }}
+                >
+                  {React.createElement(item.icon, {
+                    className: "w-6 h-6",
+                    style: { color: isDarkMode ? "#06120f" : "#ffffff" },
+                  })}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+                <p className="text-sm" style={{ color: selectedColor.muted }}>
+                  {item.desc}
+                </p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">iOS Fonts</h3>
-              <p className="text-sm" style={{ color: selectedColor.muted }}>
-                Experience San Francisco font rendering on Apple devices
-              </p>
-            </div>
-
-            <div
-              className="text-center p-6 rounded-xl border"
-              style={{
-                borderColor: selectedColor.border,
-                backgroundColor: `${selectedColor.bg}80`,
-              }}
-            >
-              <div
-                className="w-12 h-12 rounded-lg mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: selectedColor.accent }}
-              >
-                <Palette className="w-6 h-6" style={{ color: isDarkMode ? "#06120f" : "#ffffff" }} />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Android Fonts</h3>
-              <p className="text-sm" style={{ color: selectedColor.muted }}>
-                See how Roboto and Material Design fonts appear
-              </p>
-            </div>
-
-            <div
-              className="text-center p-6 rounded-xl border"
-              style={{
-                borderColor: selectedColor.border,
-                backgroundColor: `${selectedColor.bg}80`,
-              }}
-            >
-              <div
-                className="w-12 h-12 rounded-lg mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: selectedColor.accent }}
-              >
-                <Edit3 className="w-6 h-6" style={{ color: isDarkMode ? "#06120f" : "#ffffff" }} />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Windows Fonts</h3>
-              <p className="text-sm" style={{ color: selectedColor.muted }}>
-                Compare Segoe UI and Windows system typography
-              </p>
-            </div>
-
-            <div
-              className="text-center p-6 rounded-xl border"
-              style={{
-                borderColor: selectedColor.border,
-                backgroundColor: `${selectedColor.bg}80`,
-              }}
-            >
-              <div
-                className="w-12 h-12 rounded-lg mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: selectedColor.accent }}
-              >
-                <Type className="w-6 h-6" style={{ color: isDarkMode ? "#06120f" : "#ffffff" }} />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Cross-Platform</h3>
-              <p className="text-sm" style={{ color: selectedColor.muted }}>
-                Universal fallback stacks that work everywhere
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -313,7 +335,7 @@ export default function FontStackDemo() {
                       </button>
                       {isEditing && (
                         <button
-                          onClick={resetTexts}
+                          onClick={() => setTexts(defaultTexts)}
                           className="px-3 py-2 rounded-lg text-sm border cursor-pointer transition-colors hover:bg-opacity-10"
                           style={{
                             color: selectedColor.muted,
@@ -327,22 +349,21 @@ export default function FontStackDemo() {
                     </div>
                   </div>
 
-                  {/* Color Presets */}
                   <div>
                     <label className="block text-sm font-medium mb-3" style={{ color: selectedColor.muted }}>
-                      Color Theme
+                      Font Color
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {currentColorPresets.map((preset, index) => (
                         <button
-                          key={preset.name}
-                          onClick={() => setSelectedColorIndex(index)}
+                          key={`font-${preset.name}`}
+                          onClick={() => setFontColorIndex(index)}
                           className={`px-3 py-2 rounded-lg text-xs font-medium border cursor-pointer transition-all hover:scale-105 ${
-                            selectedColorIndex === index ? "ring-2" : ""
+                            fontColorIndex === index ? "ring-2" : ""
                           }`}
                           style={{
-                            backgroundColor: preset.bg,
-                            borderColor: preset.border,
+                            backgroundColor: "transparent",
+                            borderColor: preset.text,
                             color: preset.text,
                             ringColor: preset.accent,
                           }}
@@ -441,80 +462,40 @@ export default function FontStackDemo() {
             </div>
 
             {/* Font Stack Demo */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Panel - Code + Toggle */}
-              <section
-                className="border rounded-2xl overflow-hidden shadow-2xl"
-                style={{
-                  backgroundColor: selectedColor.bg,
-                  borderColor: selectedColor.border,
-                }}
-              >
-                <div
-                  className="flex items-center gap-2.5 px-6 py-4 border-b bg-gradient-to-b"
-                  style={{
-                    borderColor: selectedColor.border,
-                    backgroundImage: `linear-gradient(to bottom, ${selectedColor.bg}dd, ${selectedColor.bg})`,
-                  }}
-                >
-                  <h3 className="text-lg font-semibold m-0" style={{ color: selectedColor.text }}>
-                    Font Stack CSS
-                  </h3>
-                  <div
-                    className="ml-auto text-sm px-3 py-1 rounded-full"
-                    style={{
-                      backgroundColor: selectedColor.accent + "20",
-                      color: selectedColor.accent,
-                    }}
-                  >
-                    {activeView === "apple"
-                      ? "iOS/macOS"
-                      : activeView === "android"
-                        ? "Android"
-                        : activeView === "windows"
-                          ? "Windows"
-                          : "Universal"}
-                  </div>
-                </div>
-                <pre
-                  className="m-0 p-6 overflow-auto whitespace-pre-wrap text-sm leading-relaxed font-mono"
-                  style={{ color: selectedColor.accent }}
-                >
-                  {fontStacks[activeView]}
-                </pre>
-              </section>
-
-              {/* Right Panel - Typography Preview */}
+            <div className="grid grid-cols-1 gap-8">
+              {/* Typography Preview - Now Full Width */}
               <section
                 className="border rounded-2xl overflow-hidden shadow-2xl p-8"
                 style={{
                   backgroundColor: selectedColor.bg,
                   borderColor: selectedColor.border,
-                  fontFamily:
-                    activeView === "apple"
-                      ? '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
-                      : activeView === "android"
-                        ? 'Roboto, "Droid Sans", "Helvetica Neue", Arial, sans-serif'
-                        : activeView === "windows"
-                          ? '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
-                          : 'Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                  fontFamily: getCurrentFontFamily(),
                   fontSize: `${fontSize}%`,
                   lineHeight: `${lineHeight}%`,
                   letterSpacing: `${letterSpacing}px`,
                 }}
               >
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: selectedColor.accent }}>
+                    Typography Preview
+                  </h3>
+                  <p className="text-sm" style={{ color: selectedColor.muted }}>
+                    See how your selected font stack renders with different text styles
+                  </p>
+                </div>
+
                 {isEditing ? (
                   <textarea
                     value={texts.heading1}
-                    onChange={(e) => handleTextChange("heading1", e.target.value)}
+                    onChange={(e) => setTexts((prev) => ({ ...prev, heading1: e.target.value }))}
                     className="w-full text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
-                    style={{ color: selectedColor.text }}
+                    style={{ color: fontColor.text }}
                     rows={2}
                   />
                 ) : (
                   <h1
                     className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-4"
-                    style={{ color: selectedColor.text }}
+                    style={{ color: fontColor.text }}
                   >
                     {texts.heading1}
                   </h1>
@@ -523,15 +504,15 @@ export default function FontStackDemo() {
                 {isEditing ? (
                   <textarea
                     value={texts.heading2}
-                    onChange={(e) => handleTextChange("heading2", e.target.value)}
+                    onChange={(e) => setTexts((prev) => ({ ...prev, heading2: e.target.value }))}
                     className="w-full text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
-                    style={{ color: selectedColor.text }}
+                    style={{ color: fontColor.text }}
                     rows={2}
                   />
                 ) : (
                   <h2
                     className="text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight tracking-tight mb-4"
-                    style={{ color: selectedColor.text }}
+                    style={{ color: fontColor.text }}
                   >
                     {texts.heading2}
                   </h2>
@@ -540,15 +521,15 @@ export default function FontStackDemo() {
                 {isEditing ? (
                   <textarea
                     value={texts.heading3}
-                    onChange={(e) => handleTextChange("heading3", e.target.value)}
+                    onChange={(e) => setTexts((prev) => ({ ...prev, heading3: e.target.value }))}
                     className="w-full text-xl lg:text-2xl font-semibold leading-snug mb-3 bg-transparent border-0 resize-none outline-none"
-                    style={{ color: selectedColor.accent }}
+                    style={{ color: fontColor.accent }}
                     rows={1}
                   />
                 ) : (
                   <h3
                     className="text-xl lg:text-2xl font-semibold leading-snug mb-3"
-                    style={{ color: selectedColor.accent }}
+                    style={{ color: fontColor.accent }}
                   >
                     {activeView === "apple"
                       ? "iOS/macOS: San Francisco (via -apple-system)"
@@ -563,41 +544,335 @@ export default function FontStackDemo() {
                 {isEditing ? (
                   <textarea
                     value={texts.paragraph}
-                    onChange={(e) => handleTextChange("paragraph", e.target.value)}
+                    onChange={(e) => setTexts((prev) => ({ ...prev, paragraph: e.target.value }))}
                     className="w-full text-base leading-relaxed bg-transparent border-0 resize-none outline-none"
-                    style={{ color: selectedColor.muted }}
+                    style={{ color: fontColor.muted }}
                     rows={4}
                   />
                 ) : (
-                  <p className="text-base leading-relaxed" style={{ color: selectedColor.muted }}>
+                  <p className="text-base leading-relaxed" style={{ color: fontColor.muted }}>
                     {texts.paragraph}
                   </p>
                 )}
 
                 <div className="mt-8 pt-6 border-t" style={{ borderColor: selectedColor.border }}>
-                  <p className="text-sm font-medium mb-2" style={{ color: selectedColor.muted }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: fontColor.muted }}>
                     Sample Text Sizes:
                   </p>
                   <div className="space-y-2">
-                    <p className="text-xs" style={{ color: selectedColor.muted }}>
+                    <p className="text-xs" style={{ color: fontColor.muted }}>
                       12px - Caption text
                     </p>
-                    <p className="text-sm" style={{ color: selectedColor.muted }}>
+                    <p className="text-sm" style={{ color: fontColor.muted }}>
                       14px - Body small
                     </p>
-                    <p className="text-base" style={{ color: selectedColor.text }}>
+                    <p className="text-base" style={{ color: fontColor.text }}>
                       16px - Body regular
                     </p>
-                    <p className="text-lg font-medium" style={{ color: selectedColor.text }}>
+                    <p className="text-lg font-medium" style={{ color: fontColor.text }}>
                       18px - Body large
                     </p>
-                    <p className="text-xl font-semibold" style={{ color: selectedColor.text }}>
+                    <p className="text-xl font-semibold" style={{ color: fontColor.text }}>
                       20px - Heading small
                     </p>
                   </div>
                 </div>
               </section>
+
+              <section
+                className="border rounded-2xl overflow-hidden shadow-2xl"
+                style={{
+                  backgroundColor: selectedColor.bg,
+                  borderColor: selectedColor.border,
+                }}
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold" style={{ color: selectedColor.accent }}>
+                      CSS Code Preview
+                    </h3>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(generateCSSCode())}
+                      className="px-3 py-1 rounded-lg text-sm font-medium border transition-colors hover:bg-opacity-10"
+                      style={{
+                        borderColor: selectedColor.border,
+                        color: selectedColor.muted,
+                        backgroundColor: "transparent",
+                      }}
+                    >
+                      Copy Code
+                    </button>
+                  </div>
+                  <pre
+                    className="text-sm overflow-x-auto p-4 rounded-lg border"
+                    style={{
+                      backgroundColor: `${selectedColor.border}20`,
+                      borderColor: selectedColor.border,
+                      color: selectedColor.text,
+                      fontFamily:
+                        'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                    }}
+                  >
+                    <code>{generateCSSCode()}</code>
+                  </pre>
+                </div>
+              </section>
             </div>
+
+            {/* Implementation Methods Section */}
+            <section
+              className="border rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                backgroundColor: selectedColor.bg,
+                borderColor: selectedColor.border,
+              }}
+            >
+              <div className="p-8">
+                <h3 className="text-2xl font-semibold mb-6" style={{ color: selectedColor.accent }}>
+                  Implementation Methods
+                </h3>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4">Global CSS</h4>
+                    <pre
+                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
+                      style={{
+                        backgroundColor: `${selectedColor.border}20`,
+                        borderColor: selectedColor.border,
+                        color: selectedColor.text,
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      }}
+                    >
+                      <code>{`/* Add to your main CSS file */
+body {
+  ${fontStacks[activeView].split("\n").slice(1, -1).join("\n")}
+  color: ${fontColor.text};
+}`}</code>
+                    </pre>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4">CSS Classes</h4>
+                    <pre
+                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
+                      style={{
+                        backgroundColor: `${selectedColor.border}20`,
+                        borderColor: selectedColor.border,
+                        color: selectedColor.text,
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      }}
+                    >
+                      <code>{`.system-font {
+  ${fontStacks[activeView].split("\n").slice(1, -1).join("\n")}
+  color: ${fontColor.text};
+}
+
+/* Usage */
+<div class="system-font">Your content</div>`}</code>
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Framework Specific Implementation Section */}
+            <section
+              className="border rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                backgroundColor: selectedColor.bg,
+                borderColor: selectedColor.border,
+              }}
+            >
+              <div className="p-8">
+                <h3 className="text-2xl font-semibold mb-6" style={{ color: selectedColor.accent }}>
+                  Framework Specific Implementation
+                </h3>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4">React/JSX</h4>
+                    <pre
+                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
+                      style={{
+                        backgroundColor: `${selectedColor.border}20`,
+                        borderColor: selectedColor.border,
+                        color: selectedColor.text,
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      }}
+                    >
+                      <code>{`const fontStyle = {
+  fontFamily: '${getCurrentFontFamily()}',
+  color: '${fontColor.text}'
+};
+
+<div style={fontStyle}>
+  Your content
+</div>`}</code>
+                    </pre>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4">Tailwind CSS</h4>
+                    <pre
+                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
+                      style={{
+                        backgroundColor: `${selectedColor.border}20`,
+                        borderColor: selectedColor.border,
+                        color: selectedColor.text,
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      }}
+                    >
+                      <code>{`/* tailwind.config.js */
+module.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        'system': [${getCurrentFontFamily()
+          .split(", ")
+          .map((f) => `'${f.replace(/"/g, "")}'`)
+          .join(", ")}]
+      }
+    }
+  }
+}
+
+/* Usage */
+<div className="font-system" style={{color: '${fontColor.text}'}}>
+  Your content
+</div>`}</code>
+                    </pre>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4">CSS-in-JS (Styled Components)</h4>
+                    <pre
+                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
+                      style={{
+                        backgroundColor: `${selectedColor.border}20`,
+                        borderColor: selectedColor.border,
+                        color: selectedColor.text,
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      }}
+                    >
+                      <code>{`import styled from 'styled-components';
+
+const SystemText = styled.div\`
+  font-family: ${getCurrentFontFamily()};
+  color: ${fontColor.text};
+\`;
+
+<SystemText>Your content</SystemText>`}</code>
+                    </pre>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold mb-4">Vue.js</h4>
+                    <pre
+                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
+                      style={{
+                        backgroundColor: `${selectedColor.border}20`,
+                        borderColor: selectedColor.border,
+                        color: selectedColor.text,
+                        fontFamily:
+                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                      }}
+                    >
+                      <code>{`<template>
+  <div :style="fontStyle">
+    Your content
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      fontStyle: {
+        fontFamily: '${getCurrentFontFamily()}',
+        color: '${fontColor.text}'
+      }
+    }
+  }
+}
+</script>`}</code>
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Pro Tips Section */}
+            <section
+              className="border rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                backgroundColor: selectedColor.bg,
+                borderColor: selectedColor.border,
+              }}
+            >
+              <div className="p-8">
+                <h3 className="text-2xl font-semibold mb-6" style={{ color: selectedColor.accent }}>
+                  Pro Tips
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div
+                      className="p-4 rounded-lg border"
+                      style={{ borderColor: selectedColor.border, backgroundColor: `${selectedColor.border}10` }}
+                    >
+                      <h4 className="font-semibold mb-2" style={{ color: selectedColor.accent }}>
+                        Font Loading Performance
+                      </h4>
+                      <p className="text-sm" style={{ color: selectedColor.muted }}>
+                        System fonts load instantly since they're already installed. This eliminates FOUT (Flash of
+                        Unstyled Text) and improves Core Web Vitals.
+                      </p>
+                    </div>
+                    <div
+                      className="p-4 rounded-lg border"
+                      style={{ borderColor: selectedColor.border, backgroundColor: `${selectedColor.border}10` }}
+                    >
+                      <h4 className="font-semibold mb-2" style={{ color: selectedColor.accent }}>
+                        Accessibility Benefits
+                      </h4>
+                      <p className="text-sm" style={{ color: selectedColor.muted }}>
+                        Users can override system fonts with their preferred accessibility fonts, ensuring better
+                        readability for users with dyslexia or visual impairments.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div
+                      className="p-4 rounded-lg border"
+                      style={{ borderColor: selectedColor.border, backgroundColor: `${selectedColor.border}10` }}
+                    >
+                      <h4 className="font-semibold mb-2" style={{ color: selectedColor.accent }}>
+                        Platform Consistency
+                      </h4>
+                      <p className="text-sm" style={{ color: selectedColor.muted }}>
+                        Using system fonts ensures your app feels native on each platform, matching user expectations
+                        and OS design guidelines.
+                      </p>
+                    </div>
+                    <div
+                      className="p-4 rounded-lg border"
+                      style={{ borderColor: selectedColor.border, backgroundColor: `${selectedColor.border}10` }}
+                    >
+                      <h4 className="font-semibold mb-2" style={{ color: selectedColor.accent }}>
+                        Fallback Strategy
+                      </h4>
+                      <p className="text-sm" style={{ color: selectedColor.muted }}>
+                        Always include generic fallbacks (sans-serif, serif, monospace) at the end of your font stack
+                        for maximum compatibility.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </section>
       )}
