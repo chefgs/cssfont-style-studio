@@ -3,7 +3,7 @@
 import React from "react"
 
 import { useState, useEffect } from "react"
-import { ChevronDown, Edit3, Palette, Type, Sun, Moon } from "lucide-react"
+import { ChevronDown, Edit3, Palette, Type, Sun, Moon, Copy, Check } from "lucide-react"
 
 const fontStacks = {
   apple: `/* Apple system stack (renders San Francisco on macOS/iOS) */
@@ -54,6 +54,7 @@ export default function FontStackDemo() {
   const [lineHeight, setLineHeight] = useState(105)
   const [letterSpacing, setLetterSpacing] = useState(-1)
   const [showCustomization, setShowCustomization] = useState(false)
+  const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({})
 
   const currentColorPresets = isDarkMode ? colorPresets : lightColorPresets
   const selectedColor = currentColorPresets[selectedColorIndex]
@@ -83,34 +84,209 @@ export default function FontStackDemo() {
   const generateCSSCode = () => {
     const baseFontStack = fontStacks[activeView]
     const colorCSS = `color: ${fontColor.text};`
+    const typographyCSS = `
+  font-size: ${fontSize}%;
+  line-height: ${lineHeight}%;
+  letter-spacing: ${letterSpacing}px;`
 
     if (activeView === "cross" && baseFontStack.includes("@import")) {
       const [importLine, ...fontLines] = baseFontStack.split("\n")
       return `${importLine}
 
-/* Typography with custom color */
+/* Typography with custom styling */
 .typography-preview {
   ${fontLines.join("\n")}
-  ${colorCSS}
+  ${colorCSS}${typographyCSS}
 }`
     } else {
-      return `/* Typography with custom color */
+      return `/* Typography with custom styling */
 .typography-preview {
   ${baseFontStack.split("\n").slice(1, -1).join("\n")}
-  ${colorCSS}
+  ${colorCSS}${typographyCSS}
 }`
     }
   }
 
   const scrollToCustomization = () => {
     setShowCustomization(true)
-    // Use setTimeout to ensure the section is rendered before scrolling
     setTimeout(() => {
       document.getElementById("customization-section")?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       })
     }, 100)
+  }
+
+  const copyToClipboard = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedStates((prev) => ({ ...prev, [key]: true }))
+      setTimeout(() => {
+        setCopiedStates((prev) => ({ ...prev, [key]: false }))
+      }, 2000)
+    } catch (err) {
+      console.error("Failed to copy text: ", err)
+    }
+  }
+
+  const getFrameworkImplementations = () => {
+    const fontFamily = getCurrentFontFamily()
+    const typographyCSS = `
+  font-size: ${fontSize}%;
+  line-height: ${lineHeight}%;
+  letter-spacing: ${letterSpacing}px;`
+
+    return {
+      react: `const fontStyle = {
+  fontFamily: '${fontFamily}',
+  color: '${fontColor.text}',
+  fontSize: '${fontSize}%',
+  lineHeight: '${lineHeight}%',
+  letterSpacing: '${letterSpacing}px'
+};
+
+<div style={fontStyle}>
+  Your content
+</div>`,
+
+      tailwind: `/* tailwind.config.js */
+module.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        'system': [${fontFamily
+          .split(", ")
+          .map((f) => `'${f.replace(/"/g, "")}'`)
+          .join(", ")}]
+      },
+      fontSize: {
+        'custom': '${fontSize}%'
+      },
+      lineHeight: {
+        'custom': '${lineHeight}%'
+      },
+      letterSpacing: {
+        'custom': '${letterSpacing}px'
+      }
+    }
+  }
+}
+
+/* Usage */
+<div className="font-system text-custom leading-custom tracking-custom" 
+     style={{color: '${fontColor.text}'}}>
+  Your content
+</div>`,
+
+      styledComponents: `import styled from 'styled-components';
+
+const SystemText = styled.div\`
+  font-family: ${fontFamily};
+  color: ${fontColor.text};
+  font-size: ${fontSize}%;
+  line-height: ${lineHeight}%;
+  letter-spacing: ${letterSpacing}px;
+\`;
+
+<SystemText>Your content</SystemText>`,
+
+      vue: `<template>
+  <div :style="fontStyle">
+    Your content
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      fontStyle: {
+        fontFamily: '${fontFamily}',
+        color: '${fontColor.text}',
+        fontSize: '${fontSize}%',
+        lineHeight: '${lineHeight}%',
+        letterSpacing: '${letterSpacing}px'
+      }
+    }
+  }
+}
+</script>`,
+
+      angular: `// component.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-typography',
+  template: \`
+    <div [ngStyle]="fontStyle">
+      Your content
+    </div>
+  \`
+})
+export class TypographyComponent {
+  fontStyle = {
+    'font-family': '${fontFamily}',
+    'color': '${fontColor.text}',
+    'font-size': '${fontSize}%',
+    'line-height': '${lineHeight}%',
+    'letter-spacing': '${letterSpacing}px'
+  };
+}`,
+
+      svelte: `<script>
+  const fontStyle = {
+    fontFamily: '${fontFamily}',
+    color: '${fontColor.text}',
+    fontSize: '${fontSize}%',
+    lineHeight: '${lineHeight}%',
+    letterSpacing: '${letterSpacing}px'
+  };
+</script>
+
+<div style={Object.entries(fontStyle)
+  .map(([key, value]) => \`\${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: \${value}\`)
+  .join('; ')}>
+  Your content
+</div>`,
+
+      cssCustomProperties: `:root {
+  --font-family-system: ${fontFamily};
+  --font-color: ${fontColor.text};
+  --font-size: ${fontSize}%;
+  --line-height: ${lineHeight}%;
+  --letter-spacing: ${letterSpacing}px;
+}
+
+.typography-system {
+  font-family: var(--font-family-system);
+  color: var(--font-color);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+/* Usage */
+<div class="typography-system">Your content</div>`,
+
+      sass: `// _typography.scss
+$font-family-system: ${fontFamily};
+$font-color: ${fontColor.text};
+$font-size: ${fontSize}%;
+$line-height: ${lineHeight}%;
+$letter-spacing: ${letterSpacing}px;
+
+@mixin system-typography {
+  font-family: $font-family-system;
+  color: $font-color;
+  font-size: $font-size;
+  line-height: $line-height;
+  letter-spacing: $letter-spacing;
+}
+
+.typography-system {
+  @include system-typography;
+}`,
+    }
   }
 
   return (
@@ -173,7 +349,7 @@ export default function FontStackDemo() {
         <div className="max-w-4xl mx-auto text-center">
           <h1
             className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight mb-6"
-            style={{ fontFamily: getCurrentFontFamily() }} // Ensure hero uses selected font
+            style={{ fontFamily: getCurrentFontFamily() }}
           >
             Compare System
             <span className="block" style={{ color: selectedColor.accent }}>
@@ -185,7 +361,7 @@ export default function FontStackDemo() {
             className="text-xl sm:text-2xl mb-8 max-w-3xl mx-auto"
             style={{
               color: selectedColor.muted,
-              fontFamily: getCurrentFontFamily(), // Apply font to hero text
+              fontFamily: getCurrentFontFamily(),
             }}
           >
             Explore how typography renders across different operating systems. See the visual differences between iOS,
@@ -230,22 +406,19 @@ export default function FontStackDemo() {
         className="py-20 px-4 sm:px-6 lg:px-8 border-t"
         style={{
           borderColor: selectedColor.border,
-          fontFamily: getCurrentFontFamily(), // Apply font to what-is section
+          fontFamily: getCurrentFontFamily(),
         }}
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2
-              className="text-4xl sm:text-5xl font-bold mb-6"
-              style={{ fontFamily: getCurrentFontFamily() }} // Apply font to section heading
-            >
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6" style={{ fontFamily: getCurrentFontFamily() }}>
               What is FontStack Studio?
             </h2>
             <p
               className="text-xl max-w-3xl mx-auto"
               style={{
                 color: selectedColor.muted,
-                fontFamily: getCurrentFontFamily(), // Apply font to section text
+                fontFamily: getCurrentFontFamily(),
               }}
             >
               A powerful tool for designers and developers to visualize and compare how system fonts render across
@@ -267,7 +440,7 @@ export default function FontStackDemo() {
                 style={{
                   borderColor: selectedColor.border,
                   backgroundColor: `${selectedColor.bg}80`,
-                  fontFamily: getCurrentFontFamily(), // Apply font to cards
+                  fontFamily: getCurrentFontFamily(),
                 }}
               >
                 <div
@@ -506,7 +679,7 @@ export default function FontStackDemo() {
                     className="w-full font-extrabold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
                     style={{
                       color: fontColor.text,
-                      fontSize: `${fontSize * 0.04}rem`, // Equivalent to text-4xl but scalable
+                      fontSize: `${fontSize * 0.04}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -517,7 +690,7 @@ export default function FontStackDemo() {
                     className="font-extrabold leading-tight tracking-tight mb-4"
                     style={{
                       color: fontColor.text,
-                      fontSize: `${fontSize * 0.04}rem`, // Equivalent to text-4xl but scalable
+                      fontSize: `${fontSize * 0.04}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -533,7 +706,7 @@ export default function FontStackDemo() {
                     className="w-full font-bold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
                     style={{
                       color: fontColor.text,
-                      fontSize: `${fontSize * 0.025}rem`, // Equivalent to text-2xl but scalable
+                      fontSize: `${fontSize * 0.025}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -544,7 +717,7 @@ export default function FontStackDemo() {
                     className="font-bold leading-tight tracking-tight mb-4"
                     style={{
                       color: fontColor.text,
-                      fontSize: `${fontSize * 0.025}rem`, // Equivalent to text-2xl but scalable
+                      fontSize: `${fontSize * 0.025}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -560,7 +733,7 @@ export default function FontStackDemo() {
                     className="w-full font-semibold leading-snug mb-3 bg-transparent border-0 resize-none outline-none"
                     style={{
                       color: fontColor.accent,
-                      fontSize: `${fontSize * 0.02}rem`, // Equivalent to text-xl but scalable
+                      fontSize: `${fontSize * 0.02}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -571,7 +744,7 @@ export default function FontStackDemo() {
                     className="font-semibold leading-snug mb-3"
                     style={{
                       color: fontColor.accent,
-                      fontSize: `${fontSize * 0.02}rem`, // Equivalent to text-xl but scalable
+                      fontSize: `${fontSize * 0.02}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -593,7 +766,7 @@ export default function FontStackDemo() {
                     className="w-full leading-relaxed bg-transparent border-0 resize-none outline-none"
                     style={{
                       color: fontColor.muted,
-                      fontSize: `${fontSize * 0.016}rem`, // Equivalent to text-base but scalable
+                      fontSize: `${fontSize * 0.016}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -604,7 +777,7 @@ export default function FontStackDemo() {
                     className="leading-relaxed"
                     style={{
                       color: fontColor.muted,
-                      fontSize: `${fontSize * 0.016}rem`, // Equivalent to text-base but scalable
+                      fontSize: `${fontSize * 0.016}rem`,
                       lineHeight: `${lineHeight}%`,
                       letterSpacing: `${letterSpacing}px`,
                     }}
@@ -710,6 +883,76 @@ export default function FontStackDemo() {
               </section>
             </div>
 
+            {/* Framework Specific Implementation Section */}
+            <section
+              className="border rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                backgroundColor: selectedColor.bg,
+                borderColor: selectedColor.border,
+              }}
+            >
+              <div className="p-8">
+                <h3 className="text-2xl font-semibold mb-6" style={{ color: selectedColor.accent }}>
+                  Framework Specific Implementation
+                </h3>
+                <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
+                  {Object.entries(getFrameworkImplementations()).map(([framework, code]) => {
+                    const frameworkNames: { [key: string]: string } = {
+                      react: "React/JSX",
+                      tailwind: "Tailwind CSS",
+                      styledComponents: "Styled Components",
+                      vue: "Vue.js",
+                      angular: "Angular",
+                      svelte: "Svelte",
+                      cssCustomProperties: "CSS Custom Properties",
+                      sass: "Sass/SCSS",
+                    }
+
+                    return (
+                      <div key={framework}>
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-lg font-semibold">{frameworkNames[framework]}</h4>
+                          <button
+                            onClick={() => copyToClipboard(code, framework)}
+                            className="flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium border transition-all hover:scale-105"
+                            style={{
+                              borderColor: selectedColor.border,
+                              color: copiedStates[framework] ? selectedColor.accent : selectedColor.muted,
+                              backgroundColor: "transparent",
+                            }}
+                          >
+                            {copiedStates[framework] ? (
+                              <>
+                                <Check className="w-4 h-4" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-4 h-4" />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <pre
+                          className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
+                          style={{
+                            backgroundColor: `${selectedColor.border}20`,
+                            borderColor: selectedColor.border,
+                            color: selectedColor.text,
+                            fontFamily:
+                              'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                          }}
+                        >
+                          <code>{code}</code>
+                        </pre>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </section>
+
             {/* Implementation Methods Section */}
             <section
               className="border rounded-2xl overflow-hidden shadow-2xl"
@@ -762,134 +1005,6 @@ body {
 
 /* Usage */
 <div class="system-font">Your content</div>`}</code>
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Framework Specific Implementation Section */}
-            <section
-              className="border rounded-2xl overflow-hidden shadow-2xl"
-              style={{
-                backgroundColor: selectedColor.bg,
-                borderColor: selectedColor.border,
-              }}
-            >
-              <div className="p-8">
-                <h3 className="text-2xl font-semibold mb-6" style={{ color: selectedColor.accent }}>
-                  Framework Specific Implementation
-                </h3>
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4">React/JSX</h4>
-                    <pre
-                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
-                      style={{
-                        backgroundColor: `${selectedColor.border}20`,
-                        borderColor: selectedColor.border,
-                        color: selectedColor.text,
-                        fontFamily:
-                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                      }}
-                    >
-                      <code>{`const fontStyle = {
-  fontFamily: '${getCurrentFontFamily()}',
-  color: '${fontColor.text}'
-};
-
-<div style={fontStyle}>
-  Your content
-</div>`}</code>
-                    </pre>
-                  </div>
-
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4">Tailwind CSS</h4>
-                    <pre
-                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
-                      style={{
-                        backgroundColor: `${selectedColor.border}20`,
-                        borderColor: selectedColor.border,
-                        color: selectedColor.text,
-                        fontFamily:
-                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                      }}
-                    >
-                      <code>{`/* tailwind.config.js */
-module.exports = {
-  theme: {
-    extend: {
-      fontFamily: {
-        'system': [${getCurrentFontFamily()
-          .split(", ")
-          .map((f) => `'${f.replace(/"/g, "")}'`)
-          .join(", ")}]
-      }
-    }
-  }
-}
-
-/* Usage */
-<div className="font-system" style={{color: '${fontColor.text}'}}>
-  Your content
-</div>`}</code>
-                    </pre>
-                  </div>
-
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4">CSS-in-JS (Styled Components)</h4>
-                    <pre
-                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
-                      style={{
-                        backgroundColor: `${selectedColor.border}20`,
-                        borderColor: selectedColor.border,
-                        color: selectedColor.text,
-                        fontFamily:
-                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                      }}
-                    >
-                      <code>{`import styled from 'styled-components';
-
-const SystemText = styled.div\`
-  font-family: ${getCurrentFontFamily()};
-  color: ${fontColor.text};
-\`;
-
-<SystemText>Your content</SystemText>`}</code>
-                    </pre>
-                  </div>
-
-                  <div>
-                    <h4 className="text-lg font-semibold mb-4">Vue.js</h4>
-                    <pre
-                      className="text-sm overflow-x-auto p-4 rounded-lg border mb-4"
-                      style={{
-                        backgroundColor: `${selectedColor.border}20`,
-                        borderColor: selectedColor.border,
-                        color: selectedColor.text,
-                        fontFamily:
-                          'ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-                      }}
-                    >
-                      <code>{`<template>
-  <div :style="fontStyle">
-    Your content
-  </div>
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      fontStyle: {
-        fontFamily: '${getCurrentFontFamily()}',
-        color: '${fontColor.text}'
-      }
-    }
-  }
-}
-</script>`}</code>
                     </pre>
                   </div>
                 </div>
