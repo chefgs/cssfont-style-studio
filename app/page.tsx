@@ -423,6 +423,21 @@ export default function FontStackDemo() {
                           style={{ accentColor: selectedColor.accent }}
                         />
                       </div>
+                      <button
+                        onClick={() => {
+                          setFontSize(100)
+                          setLineHeight(105)
+                          setLetterSpacing(-1)
+                        }}
+                        className="w-full px-3 py-2 rounded-lg text-sm border cursor-pointer transition-colors hover:bg-opacity-10"
+                        style={{
+                          color: selectedColor.muted,
+                          borderColor: selectedColor.border,
+                          backgroundColor: "transparent",
+                        }}
+                      >
+                        Reset Typography
+                      </button>
                     </div>
                   </div>
 
@@ -488,14 +503,24 @@ export default function FontStackDemo() {
                   <textarea
                     value={texts.heading1}
                     onChange={(e) => setTexts((prev) => ({ ...prev, heading1: e.target.value }))}
-                    className="w-full text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
-                    style={{ color: fontColor.text }}
+                    className="w-full font-extrabold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
+                    style={{
+                      color: fontColor.text,
+                      fontSize: `${fontSize * 0.04}rem`, // Equivalent to text-4xl but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
                     rows={2}
                   />
                 ) : (
                   <h1
-                    className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight tracking-tight mb-4"
-                    style={{ color: fontColor.text }}
+                    className="font-extrabold leading-tight tracking-tight mb-4"
+                    style={{
+                      color: fontColor.text,
+                      fontSize: `${fontSize * 0.04}rem`, // Equivalent to text-4xl but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
                   >
                     {texts.heading1}
                   </h1>
@@ -505,14 +530,24 @@ export default function FontStackDemo() {
                   <textarea
                     value={texts.heading2}
                     onChange={(e) => setTexts((prev) => ({ ...prev, heading2: e.target.value }))}
-                    className="w-full text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
-                    style={{ color: fontColor.text }}
+                    className="w-full font-bold leading-tight tracking-tight mb-4 bg-transparent border-0 resize-none outline-none"
+                    style={{
+                      color: fontColor.text,
+                      fontSize: `${fontSize * 0.025}rem`, // Equivalent to text-2xl but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
                     rows={2}
                   />
                 ) : (
                   <h2
-                    className="text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight tracking-tight mb-4"
-                    style={{ color: fontColor.text }}
+                    className="font-bold leading-tight tracking-tight mb-4"
+                    style={{
+                      color: fontColor.text,
+                      fontSize: `${fontSize * 0.025}rem`, // Equivalent to text-2xl but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
                   >
                     {texts.heading2}
                   </h2>
@@ -522,14 +557,24 @@ export default function FontStackDemo() {
                   <textarea
                     value={texts.heading3}
                     onChange={(e) => setTexts((prev) => ({ ...prev, heading3: e.target.value }))}
-                    className="w-full text-xl lg:text-2xl font-semibold leading-snug mb-3 bg-transparent border-0 resize-none outline-none"
-                    style={{ color: fontColor.accent }}
+                    className="w-full font-semibold leading-snug mb-3 bg-transparent border-0 resize-none outline-none"
+                    style={{
+                      color: fontColor.accent,
+                      fontSize: `${fontSize * 0.02}rem`, // Equivalent to text-xl but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
                     rows={1}
                   />
                 ) : (
                   <h3
-                    className="text-xl lg:text-2xl font-semibold leading-snug mb-3"
-                    style={{ color: fontColor.accent }}
+                    className="font-semibold leading-snug mb-3"
+                    style={{
+                      color: fontColor.accent,
+                      fontSize: `${fontSize * 0.02}rem`, // Equivalent to text-xl but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
                   >
                     {activeView === "apple"
                       ? "iOS/macOS: San Francisco (via -apple-system)"
@@ -545,34 +590,80 @@ export default function FontStackDemo() {
                   <textarea
                     value={texts.paragraph}
                     onChange={(e) => setTexts((prev) => ({ ...prev, paragraph: e.target.value }))}
-                    className="w-full text-base leading-relaxed bg-transparent border-0 resize-none outline-none"
-                    style={{ color: fontColor.muted }}
+                    className="w-full leading-relaxed bg-transparent border-0 resize-none outline-none"
+                    style={{
+                      color: fontColor.muted,
+                      fontSize: `${fontSize * 0.016}rem`, // Equivalent to text-base but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
                     rows={4}
                   />
                 ) : (
-                  <p className="text-base leading-relaxed" style={{ color: fontColor.muted }}>
+                  <p
+                    className="leading-relaxed"
+                    style={{
+                      color: fontColor.muted,
+                      fontSize: `${fontSize * 0.016}rem`, // Equivalent to text-base but scalable
+                      lineHeight: `${lineHeight}%`,
+                      letterSpacing: `${letterSpacing}px`,
+                    }}
+                  >
                     {texts.paragraph}
                   </p>
                 )}
 
                 <div className="mt-8 pt-6 border-t" style={{ borderColor: selectedColor.border }}>
-                  <p className="text-sm font-medium mb-2" style={{ color: fontColor.muted }}>
+                  <p
+                    className="font-medium mb-2"
+                    style={{
+                      color: fontColor.muted,
+                      fontSize: `${fontSize * 0.014}rem`,
+                    }}
+                  >
                     Sample Text Sizes:
                   </p>
                   <div className="space-y-2">
-                    <p className="text-xs" style={{ color: fontColor.muted }}>
+                    <p
+                      style={{
+                        color: fontColor.muted,
+                        fontSize: `${fontSize * 0.012}rem`,
+                      }}
+                    >
                       12px - Caption text
                     </p>
-                    <p className="text-sm" style={{ color: fontColor.muted }}>
+                    <p
+                      style={{
+                        color: fontColor.muted,
+                        fontSize: `${fontSize * 0.014}rem`,
+                      }}
+                    >
                       14px - Body small
                     </p>
-                    <p className="text-base" style={{ color: fontColor.text }}>
+                    <p
+                      style={{
+                        color: fontColor.text,
+                        fontSize: `${fontSize * 0.016}rem`,
+                      }}
+                    >
                       16px - Body regular
                     </p>
-                    <p className="text-lg font-medium" style={{ color: fontColor.text }}>
+                    <p
+                      className="font-medium"
+                      style={{
+                        color: fontColor.text,
+                        fontSize: `${fontSize * 0.018}rem`,
+                      }}
+                    >
                       18px - Body large
                     </p>
-                    <p className="text-xl font-semibold" style={{ color: fontColor.text }}>
+                    <p
+                      className="font-semibold"
+                      style={{
+                        color: fontColor.text,
+                        fontSize: `${fontSize * 0.02}rem`,
+                      }}
+                    >
                       20px - Heading small
                     </p>
                   </div>
@@ -689,7 +780,7 @@ body {
                 <h3 className="text-2xl font-semibold mb-6" style={{ color: selectedColor.accent }}>
                   Framework Specific Implementation
                 </h3>
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                   <div>
                     <h4 className="text-lg font-semibold mb-4">React/JSX</h4>
                     <pre
