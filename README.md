@@ -1,30 +1,82 @@
-# Reactjs website creation
+# FontStack Studio
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+A powerful React.js application for designers and developers to visualize and compare how system fonts render across different platforms and devices.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/saravanan-gs-projects/v0-reactjs-website-creation)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/OidMM5vkxeV)
+## Features
 
-## Overview
+- **Platform-Specific Font Stacks**: Compare iOS (San Francisco), Android (Roboto), Windows (Segoe UI), and cross-platform fonts
+- **Dark/Light Mode Toggle**: Switch between themes for better visibility
+- **Live Text Editing**: Modify demo text in real-time to test your own content
+- **Typography Controls**: Adjust font size, line height, and letter spacing
+- **Color Themes**: Choose from 5 beautiful color presets
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## Getting Started
 
-## Deployment
+### Prerequisites
 
-Your project is live at:
+- Node.js 18+ 
+- npm or yarn
 
-**[https://vercel.com/saravanan-gs-projects/v0-reactjs-website-creation](https://vercel.com/saravanan-gs-projects/v0-reactjs-website-creation)**
+### Installation
 
-## Build your app
+1. Clone the repository:
+\`\`\`bash
+git clone <repository-url>
+cd fontstack-studio
+\`\`\`
 
-Continue building your app on:
+2. Install dependencies:
+\`\`\`bash
+npm install
+# or
+yarn install
+\`\`\`
 
-**[https://v0.app/chat/projects/OidMM5vkxeV](https://v0.app/chat/projects/OidMM5vkxeV)**
+3. Run the development server:
+\`\`\`bash
+npm run dev
+# or
+yarn dev
+\`\`\`
 
-## How It Works
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Usage
+
+1. **Explore Font Stacks**: Use the platform buttons (iOS, Android, Windows, Cross-Platform) to switch between different font stacks
+2. **Customize Colors**: Select from 5 color themes in both light and dark modes
+3. **Edit Text**: Toggle text editing to modify the demo content with your own text
+4. **Adjust Typography**: Use the sliders to fine-tune font size, line height, and letter spacing
+5. **Copy CSS**: Use the generated CSS code in your own projects
+
+## Font Stacks Included
+
+- **iOS/macOS**: `-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif`
+- **Android**: `Roboto, "Droid Sans", "Helvetica Neue", Arial, sans-serif`
+- **Windows**: `"Segoe UI", Tahoma, Geneva, Verdana, sans-serif`
+- **Cross-Platform**: `Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`
+
+## Technologies Used
+
+- **React 18** with TypeScript
+- **Next.js 14** (App Router)
+- **Tailwind CSS** for styling
+- **Lucide React** for icons
+- **Google Fonts** (Inter) for cross-platform fallback
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+If you encounter any issues or have questions, please open an issue on GitHub.
